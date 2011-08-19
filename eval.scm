@@ -33,9 +33,31 @@
     (if (symbol? xcar) (binding xcar) xcar)
     (args xcdr env))))
 
-(define (eval-cond clauses env)
-  (print "stub eval-cond"))
+(define (progn forms env)
+  (cond
+   ((null? forms))
+   (else
+    (let ((xcar (car forms)) (xcdr (cdr forms)))
+      (cond
+       ((null? xcdr) (*eval xcar env))
+       (else
+	(*eval xcar env)
+	(progn xcdr env)))))))
 
+(define (eval-cond clauses env)
+  (cond
+   ((null? clauses))
+   (else
+    (eval-cond-body clauses env))))
+
+(define (eval-cond-body clauses env)
+   (let* (
+	 (clause (car clauses)) (clauses (cdr clauses)) (p (car clause)))
+     (cond
+      ((or (eq? 'else p) (*eval p env)) (progn (cdr clause) env))
+      ((null? clauses))
+      (eval-cond-body clauses env))))
+      
 (define (*apply function args)
   (print "stub apply"))
 
