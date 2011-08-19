@@ -1,13 +1,28 @@
+(define undef (if #f #f))
+
+(define dummy-pad (make-hash-table))
+(hash-table-put! dummy-pad 'x 123)
+(define dummy-env (cons dummy-pad ()))
+
 (define (*eval form env)
   (cond
-   ((or (null? form) (boolean? form)) form)
+   ((or (null? form) (boolean? form) (number? form)) form)
    ((symbol? form) (binding form env))
    ((pair? form) (eval-pair (car form) (cdr form) env))
    (else
     (error "unknown atom"))))
 
 (define (binding symbol env)
-  (print "stub binding"))
+  (cond
+   ((null? env))
+   (else
+    (let ((pad (car env)))
+      (let ((got (hash-table-get pad symbol)))
+	(cond
+	 ((eq? undef got)
+	  (binding symbol (cdr env)))
+	 (else
+	  got)))))))
 
 (define (eval-pair xcar xcdr env)
   (cond
@@ -30,7 +45,7 @@
 (*eval () ())
 (*eval #t ())
 (*eval #f ())
-(*eval 'x ())
+(*eval 'x dummy-env)
 (*eval ''quoted ())
 (*eval '(cond) ())
 (*eval '(cond (#f ...)) ())
