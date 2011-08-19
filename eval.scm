@@ -14,7 +14,7 @@
 
 (define (binding symbol env)
   (cond
-   ((null? env))
+   ((null? env) undef)
    (else
     (let ((pad (car env)))
       (let ((got (hash-table-get pad symbol)))
@@ -35,7 +35,7 @@
 
 (define (progn forms env)
   (cond
-   ((null? forms))
+   ((null? forms) undef)
    (else
     (let ((xcar (car forms)) (xcdr (cdr forms)))
       (cond
@@ -46,18 +46,21 @@
 
 (define (eval-cond clauses env)
   (cond
-   ((null? clauses))
+   ((null? clauses) undef)
    (else
     (eval-cond-body clauses env))))
 
 (define (eval-cond-body clauses env)
-   (let* (
-	 (clause (car clauses)) (clauses (cdr clauses)) (p (car clause)))
+  (let* ((clause (car clauses)) (clauses (cdr clauses)) (p (car clause)))
      (cond
-      ((or (eq? 'else p) (*eval p env)) (progn (cdr clause) env))
-      ((null? clauses))
-      (eval-cond-body clauses env))))
-      
+      ((if
+	(eq? 'else p)
+	(if (null? clauses) #t (error "else and more"))
+	(*eval p env))
+       (progn (cdr clause) env))
+      ((null? clauses) undef)
+      (else (eval-cond-body clauses env)))))
+ 
 (define (*apply function args)
   (print "stub apply"))
 
@@ -73,15 +76,25 @@
 (*eval '(cond (#f ...)) ())
 (*eval
  '(cond
+   (else #f #t))
+ ())
+(*eval
+ '(cond
    (#f ...)
    (else #f #t))
  ())
 (*eval
  '(cond
    (#f ...)
-   (else #f #t)
+   (#t #f #t)
    (#t ...))
  ())
+(*eval
+ '(cond
+   (else)
+   (#t 123))
+ ()
+)
 (*eval
 	(
 		(
