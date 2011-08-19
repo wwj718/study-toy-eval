@@ -30,7 +30,7 @@
 (*eval () ())
 (*eval #t ())
 (*eval #f ())
-(*eval x ())
+(*eval 'x ())
 (*eval ''quoted ())
 (*eval '(cond) ())
 (*eval '(cond (#f ...)) ())
