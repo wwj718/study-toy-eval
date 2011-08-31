@@ -65,7 +65,7 @@
   (print "stub apply"))
 
 (define (make-closure spec env)
-  (print "stub make-closure"))
+  (cons spec env))
 
 (*eval () ())
 (*eval #t ())
@@ -95,19 +95,9 @@
    (#t 123))
  ()
 )
-(*eval
+(
 	(
-		(
-			(lambda (x) (lambda () x))
-			#t
-		)
+		(lambda (x) (lambda () x))
+		#t
 	)
-	()
-))
-	)
-		;()
-	)
-	;()
-	(ineraction-environment)
 )
-
