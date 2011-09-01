@@ -4,16 +4,23 @@
 
 (define dummy-env (cons globals ()))
 
-(define dummy-env
-  (let ((pad #f))
-    (set! pad (make-hash-table))
-    (hash-table-put! pad 'x 123)
-    (cons pad dummy-env)))
+(define (make-pad params values)
+  (define
+    (make-pad-iter pad params values)
+    (cond
+     ((null? params) pad)
+     (else
+      (hash-table-put! pad (car params) (car values))
+      (make-pad-iter pad (cdr params) (cdr values)))))
+  (make-pad-iter (make-hash-table) params values))
 
-(define built-in '(cons))
+(define dummy-env
+  (cons (make-pad '(x) '(123)) dummy-env))
+
+(define delegate '(cons))
 
 (dolist
- (symbol built-in)
+ (symbol delegate)
  (hash-table-put!
   globals symbol
   (cons 'delegate (eval symbol (interaction-environment)))))
@@ -99,16 +106,6 @@
 	     (make-pad (cadr lambda) args)
 	     (cdr xcdr)))) ; old env
 	(progn (cddr lambda) env))))))
-
-(define (make-pad params values)
-  (define
-    (make-pad-iter pad params values)
-    (cond
-     ((null? params) pad)
-     (else
-      (hash-table-put! pad (car params) (car values))
-      (make-pad-iter pad (cdr params) (cdr values)))))
-  (make-pad-iter (make-hash-table) params values))
 
 (define (make-closure lambda-form env)
   (cons 'closure (cons lambda-form env)))
