@@ -17,7 +17,7 @@
 (define dummy-env
   (cons (make-pad '(x) '(123)) dummy-env))
 
-(define delegate '(cons))
+(define delegate '(car cdr cons eq? boolean? number?))
 
 (dolist
  (symbol delegate)
@@ -51,12 +51,17 @@
    (else
     (let ((xcdr (cdr form)))
       (cond
+       ((eq? 'define xcar) (*define (car xcdr) (cadr xcdr) env))
        ((eq? 'quote xcar) (car xcdr))
        ((eq? 'cond xcar) (eval-cond xcdr env))
        (else
 	(*apply
 	 (*eval xcar env)
 	 (args xcdr env))))))))
+
+(define (*define symbol form env)
+  (hash-table-put! globals symbol (*eval form env))
+  symbol)
 
 (define (args xargs env)
   (cond
@@ -82,12 +87,12 @@
     (eval-cond-body clauses env))))
 
 (define (eval-cond-body clauses env)
-  (let* ((clause (car clauses)) (clauses (cdr clauses)) (p (car clause)))
+  (let* ((clause (car clauses)) (clauses (cdr clauses)) (pred (car clause)))
      (cond
       ((if
-	(eq? 'else p)
+	(eq? 'else pred)
 	(if (null? clauses) #t (error "else and more"))
-	(*eval p env))
+	(*eval pred env))
        (progn (cdr clause) env))
       ((null? clauses) undef)
       (else (eval-cond-body clauses env)))))
@@ -109,3 +114,13 @@
 
 (define (make-closure lambda-form env)
   (cons 'closure (cons lambda-form env)))
+
+(define *cons
+  (lambda (x y)
+    (lambda (get-car)
+      (cond
+       (get-car x)
+       (else y)))))
+
+(define *car (lambda (z) (z #t)))
+(define *cdr (lambda (z) (z #f)))
