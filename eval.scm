@@ -29,7 +29,7 @@
 (define (*eval-pair form env)
   (match
    form
-   (('lambda (? *null-or-pair? params) body . _)
+   (('lambda params body . _)
     (list 'closure env params body))
    (_
     (*apply form env))))
@@ -66,7 +66,7 @@
       (lambda ()
 	(match
 	 func-body
-	 (((? *null-or-pair? env) (? *null-or-pair? params) form)
+	 (((? *null-or-pair? env) params form)
 	  (values env params form))
 	 (_ (*error func-body "syntax: broken func-body"))))
     (lambda (env params form)
@@ -82,6 +82,9 @@
      ((null? args) frame)
      (else
       (*error args "syntax: broken args"))))
+   ((symbol? params)
+    (hash-table-put! frame params args)
+    frame)
    ((pair? params)
     (cond
      ((pair? args)
