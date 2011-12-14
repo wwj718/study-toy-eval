@@ -1,126 +1,139 @@
-(define undef (if #f #f))
-
-(define globals (make-hash-table))
-
-(define dummy-env (cons globals ()))
-
-(define (make-pad params values)
-  (define
-    (make-pad-iter pad params values)
-    (cond
-     ((null? params) pad)
-     (else
-      (hash-table-put! pad (car params) (car values))
-      (make-pad-iter pad (cdr params) (cdr values)))))
-  (make-pad-iter (make-hash-table) params values))
-
-(define dummy-env
-  (cons (make-pad '(x) '(123)) dummy-env))
-
-(define delegate '(car cdr cons eq? boolean? number?))
-
-(dolist
- (symbol delegate)
- (hash-table-put!
-  globals symbol
-  (cons 'delegate (eval symbol (interaction-environment)))))
+(use util.match)
 
 (define (*eval form env)
   (cond
-   ((or (null? form) (boolean? form) (number? form)) form)
-   ((symbol? form) (binding form env))
-   ((pair? form) (eval-pair (car form) form env))
-   (else
-    (error "unknown atom"))))
+   ((*literal? form) form)
+   ((symbol? form) (*binding form env))
+   ((pair? form) (*eval-pair form env))
+   (else (*error form "syntax: bad form"))))
 
-(define (binding symbol env)
+(define (*literal? form)
+  (or
+   (null? form)
+   (boolean? form)
+   (number? form)))
+
+(define (*binding var env)
   (cond
-   ((null? env) undef)
+   ((null? env) (*error env "no more frame"))
+   ((not (pair? env)) (*error env "broken data: env"))
    (else
-    (let ((pad (car env)))
-      (let ((got (hash-table-get pad symbol undef)))
-	(cond
-	 ((eq? undef got)
-	  (binding symbol (cdr env)))
-	 (else
-	  got)))))))
+    (let ((frame (car env)))
+      (if (not (hash-table? frame)) (error frame "broken data: frame"))
+      (guard
+       (_
+	(else
+	 (*binding var (cdr env))))
+       (hash-table-get frame var))))))
 
-(define (eval-pair xcar form env)
+(define (*eval-pair form env)
+  (match
+   form
+   (('lambda (? *null-or-pair? params) body . _)
+    (list 'closure env params body))
+   (_
+    (*apply form env))))
+
+(define (*null-or-pair? s)
+  (or (null? s) (pair? s)))
+
+(define (*apply form env)
+  (match
+   form
+   ((func . args)
+    (match
+     (*eval func env)
+     ((func-tag . func-body)
+      (let ((args2 (*eval-args-or-not func-tag args env)))
+	(match
+	 func-tag
+	 ('closure (*apply-closure func-body args2))
+	 ('special (apply func-body (list args env)))
+	 ((or 'misc 'primitive)
+	  (apply func-body args2))
+	(_ (*error func-tag "syntax: broken func-tag")))))
+     (_ (*error func "syntax: broken func"))))
+   (_ (*error form "syntax: broken application"))))
+
+(define (*eval-args-or-not func-tag args env)
+  (match
+   func-tag
+   ((or 'special 'misc) args)
+   (_  (*eval-args args env))))
+
+(define (*apply-closure func-body args)
+  (call-with-values
+      (lambda ()
+	(match
+	 func-body
+	 (((? *null-or-pair? env) (? *null-or-pair? params) form)
+	  (values env params form))
+	 (_ (*error func-body "syntax: broken func-body"))))
+    (lambda (env params form)
+      (*eval form (cons (*frame (make-hash-table) params args) env)))))
+
+(define (*eval-args args env)
+  (map (lambda (var) (*eval var env)) args))
+
+(define (*frame frame params args)
   (cond
-   ((eq? 'lambda xcar) (make-closure form env))
-   (else
-    (let ((xcdr (cdr form)))
-      (cond
-       ((eq? 'define xcar) (*define (car xcdr) (cadr xcdr) env))
-       ((eq? 'quote xcar) (car xcdr))
-       ((eq? 'cond xcar) (eval-cond xcdr env))
-       (else
-	(*apply
-	 (*eval xcar env)
-	 (args xcdr env))))))))
-
-(define (*define symbol form env)
-  (hash-table-put! globals symbol (*eval form env))
-  symbol)
-
-(define (args xargs env)
-  (cond
-   ((null? xargs) ())
-   (else
-    (cons (*eval (car xargs) env) (args (cdr xargs) env)))))
-
-(define (progn forms env)
-  (cond
-   ((null? forms) undef)
-   (else
-    (let ((xcar (car forms)) (xcdr (cdr forms)))
-      (cond
-       ((null? xcdr) (*eval xcar env))
-       (else
-	(*eval xcar env)
-	(progn xcdr env)))))))
-
-(define (eval-cond clauses env)
-  (cond
-   ((null? clauses) undef)
-   (else
-    (eval-cond-body clauses env))))
-
-(define (eval-cond-body clauses env)
-  (let* ((clause (car clauses)) (clauses (cdr clauses)) (pred (car clause)))
-     (cond
-      ((if
-	(eq? 'else pred)
-	(if (null? clauses) #t (error "else and more"))
-	(*eval pred env))
-       (progn (cdr clause) env))
-      ((null? clauses) undef)
-      (else (eval-cond-body clauses env)))))
- 
-(define (*apply function args)
-  (let ((xcar (car function)))
+   ((null? params)
     (cond
-     ((eq? xcar 'delegate)
-      (apply (cdr function) args))
+     ((null? args) frame)
      (else
-      (let*
-	  ((xcdr (cdr function))
-	   (lambda (car xcdr))
-	   (env
-	    (cons
-	     (make-pad (cadr lambda) args)
-	     (cdr xcdr)))) ; old env
-	(progn (cddr lambda) env))))))
+      (*error args "syntax: broken args"))))
+   ((pair? params)
+    (cond
+     ((pair? args)
+      (hash-table-put! frame (car params) (car args))
+      (*frame frame (cdr params) (cdr args)))
+     (*error args "syntax: broken args")))
+   (else
+    (*error params "syntax: broken params"))))
 
-(define (make-closure lambda-form env)
-  (cons 'closure (cons lambda-form env)))
+(define (*error s m)
+  (error "*MINIEVAL*" s m))
 
-(define *cons
-  (lambda (x y)
-    (lambda (get-car)
-      (cond
-       (get-car x)
-       (else y)))))
+(define *base-funcs
+  (let
+      ((e (interaction-environment))
+       (frame (make-hash-table)))
+    (for-each
+     (lambda (name)
+       (hash-table-put! frame name (cons 'primitive (eval name e))))
+     '(car cdr cons eq? pair? = + - print))
+    frame))
 
-(define *car (lambda (z) (z #t)))
-(define *cdr (lambda (z) (z #f)))
+(define *base-misc
+  (let ((frame (make-hash-table)))
+    (hash-table-put! frame 'quote (cons 'misc identity))
+    frame))
+
+(define *base-specials
+  (let ((frame (make-hash-table)))
+    (hash-table-put!
+     frame
+     'if
+     (cons
+      'special
+      (lambda (args env)
+	(match
+	 args
+	 ((pred t f) (if (*eval pred env) (*eval t env) (*eval f env)))
+	 (_ (*error args "syntax: if"))))))
+    (hash-table-put!
+     frame
+     'define
+     (cons
+      'special
+      (lambda (args env)
+	(match
+	 args
+	 ((name expression)
+	  (hash-table-put! *base-user name (*eval expression env)))
+	 (_ (*error args "syntax: define"))))))
+    frame))
+
+(define *base-user (make-hash-table))
+
+(define *base-env (list *base-user *base-funcs *base-misc *base-specials))
