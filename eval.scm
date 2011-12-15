@@ -1,58 +1,29 @@
 (use util.match)
 
-(define *keywords (make-hash-table))
+(define (*eval-pair *car *cdr env)
+  (call/cc
+   (lambda (return)
+     (if (eq? *car 'lambda) (return (cons 'closure (cons env *cdr))))
+     (let ((ecar (*eval *car env)))
+       (if
+	(symbol? *car)
+	(match
+	 ecar
+	 (('syntax pattern clauses)
+	  (return (*eval-syntax pattern clauses *cdr env)))
+	 (('macro pattern clauses)
+	  (return (*eval-macro pattern clauses *cdr env)))
+	 (_ 'any)))
+       (*apply ecar (map (lambda (arg) (*eval arg env)) *cdr))))))
 
-(hash-table-put!
- *keywords 'quote '(
- (_ form)
- form))
- 
-(hash-table-put!
- *keywords 'if '(
- (env pred on-true on-false)
- (if (*eval pred env) (*eval on-true env) (*eval on-false env))))
-
-(define (*eval-pair car cdr env)
-  (cond
-   ((eq? car 'lambda) (cons 'closure (cons env cdr)))
-  (else
-   (guard
-    (_
-     (else
-      (*apply
-       (*eval car env)
-       (map (lambda (arg) (*eval arg env)) cdr))))
-    (*try-special car cdr env)))))
-
-(define (*try-special car cdr env)
+(define (*eval-syntax pattern clauses cdr env)
   (define (trigger) (list 'quote (cons env cdr)))
-  (define (clauses) (hash-table-get *keywords car))
   (eval
-   (list 'match (trigger) (clauses))
+   (list 'match (trigger) (list pattern clauses))
    (interaction-environment)))
 
-(define (*eval form env)
-  (match
-   form
-   ((car . cdr) (*eval-pair car cdr env))
-   ((? *literal? _) form)
-   (_ (*binding form env))))
-
-(define (*literal? form)
-  (or
-   (null? form)
-   (boolean? form)
-   (number? form)))
-
-(define (*binding var env)
-  (call/cc
-   (lambda (x)
-     (for-each
-      (lambda (frame)
-	(if (not (hash-table? frame)) (*error frame "broken data: frame"))
-	(guard (_ (else)) (x (hash-table-get frame var))))
-      env)
-     (*error var "unbound"))))
+(define (*eval-macro pattern clauses cdr env)
+  (list 'macro pattern clauses cdr env))
 
 (define (*apply func args)
   (cond
@@ -92,22 +63,31 @@
    (else
     (*error params "syntax: broken params"))))
 
-(define (*error a b)
-  (error "*MINIEVAL*" a b))
+(define (*eval form env)
+  (match
+   form
+   ((car . cdr) (*eval-pair car cdr env))
+   ((? *literal? _) form)
+   (_ (*binding form env))))
 
-(define *base-frame (make-hash-table))
+(define (*literal? form)
+  (or
+   (null? form)
+   (boolean? form)
+   (number? form)))
 
-(hash-table-put! *base-frame 'car car)
-(hash-table-put! *base-frame 'cdr cdr)
-(hash-table-put! *base-frame 'cons cons)
-(hash-table-put! *base-frame 'eq? eq?)
-(hash-table-put! *base-frame '= =)
-(hash-table-put! *base-frame '+ +)
-(hash-table-put! *base-frame '- -)
-(hash-table-put! *base-frame 'print print)
+(define (*binding var env)
+  (call/cc
+   (lambda (return)
+     (for-each
+      (lambda (frame)
+	(if (not (hash-table? frame)) (*error frame "broken data: frame"))
+	(guard (_ (else)) (return (hash-table-get frame var))))
+      env)
+     (*error var "unbound"))))
 
-(hash-table-put!
- *base-frame '*define
- (lambda (var val) (hash-table-put! *base-frame var val)))
+(define *error
+  (lambda x
+    (apply error (cons "*MINIEVAL*" x))))
 
-(define *base-env (list *base-frame))
+(load "./base-env.scm")
