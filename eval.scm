@@ -39,7 +39,7 @@
      (_ (*error func-body "syntax: broken func-body"))))
   (define (grown-env env params)
     (cons
-     (*frame (make-hash-table) params args)
+     (*frame params args)
      env))
   (call-with-values parse-func-body
     (lambda (env params form)
@@ -48,24 +48,28 @@
 (define (*null-or-pair? s)
   (or (null? s) (pair? s)))
 
-(define (*frame frame params args)
-  (cond
-   ((null? params)
-    (cond
-     ((null? args) frame)
-     (else
-      (*error args "syntax: broken args"))))
-   ((symbol? params)
-    (hash-table-put! frame params args)
-    frame)
-   ((pair? params)
-    (cond
-     ((pair? args)
-      (hash-table-put! frame (car params) (car args))
-      (*frame frame (cdr params) (cdr args)))
-     (*error args "syntax: broken args")))
-   (else
-    (*error params "syntax: broken params"))))
+(define (*frame params args)
+  (let ((frame (make-hash-table)))
+    (define (iter params args)
+      (cond
+       ((null? params)
+	(cond
+	 ((null? args) frame)
+	 (else
+	  (*error args "syntax: broken args"))))
+       ((symbol? params)
+	(hash-table-put! frame params args)
+	frame)
+       ((pair? params)
+	(cond
+	 ((pair? args)
+	  (hash-table-put! frame (car params) (car args))
+	  (iter (cdr params) (cdr args)))
+	 (else
+	  (*error args "syntax: broken args"))))
+       (else
+	(*error params "syntax: broken params"))))
+    (iter params args)))
 
 (define (*eval form env)
   (match
