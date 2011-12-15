@@ -31,15 +31,19 @@
    (else (*apply-closure (cdr func) args))))
 
 (define (*apply-closure func-body args)
-  (call-with-values
-      (lambda ()
-	(match
-	 func-body
-	 (((? *null-or-pair? env) params form)
-	  (values env params form))
-	 (_ (*error func-body "syntax: broken func-body"))))
+  (define (parse-func-body)
+    (match
+     func-body
+     (((? *null-or-pair? env) params form)
+      (values env params form))
+     (_ (*error func-body "syntax: broken func-body"))))
+  (define (grown-env env params)
+    (cons
+     (*frame (make-hash-table) params args)
+     env))
+  (call-with-values parse-func-body
     (lambda (env params form)
-      (*eval form (cons (*frame (make-hash-table) params args) env)))))
+      (*eval form (grown-env env params)))))
 
 (define (*null-or-pair? s)
   (or (null? s) (pair? s)))
