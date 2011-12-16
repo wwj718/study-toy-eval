@@ -1,29 +1,65 @@
 (use util.match)
 
-(define (*eval-pair *car *cdr env)
+(define (*eval form env)
+  (match
+   form
+   ((car . cdr) (*eval-pair car cdr env))
+   ((? *literal? _) form)
+   (_ (*binding form env))))
+
+(define (*literal? form)
+  (or
+   (null? form)
+   (boolean? form)
+   (number? form)))
+
+(define (*binding var env)
   (call/cc
    (lambda (return)
-     (if (eq? *car 'lambda) (return (cons 'closure (cons env *cdr))))
+     (for-each
+      (lambda (frame)
+	(if (not (hash-table? frame)) (*error frame "broken data: frame"))
+	(guard (_ (else)) (return (hash-table-get frame var))))
+      env)
+     (*error var "unbound"))))
+
+(define (*eval-pair *car *cdr env)
+  ; internal functions below all use closure variables directly or indirectly.
+  (define (make-closure)
+    (cons 'closure (cons env *cdr)))
+  (define (evaluated-args)
+    (map (lambda (arg) (*eval arg env)) *cdr))
+  (define (choose-special-form-handler selector)
+    (match
+     selector
+     ('syntax syntax-handler)
+     ('macro macro-handler)
+     (_ #f)))
+  (define (syntax-handler pattern clauses)
+    (define (trigger) (list 'quote (cons env *cdr)))
+    (eval
+     (list 'match (trigger) (list pattern clauses))
+     (interaction-environment)))
+  (define (macro-handler pattern clauses)
+    (list 'macro pattern clauses cdr env))
+  ; (call/cc (lambda (return) ... (if ... (return ...)) ...))
+  ; is an idiom simulating a `return short cut.'
+  (call/cc
+   (lambda (return)
+     (if (eq? *car 'lambda) (return (make-closure)))
      (let ((ecar (*eval *car env)))
+       ; apply if
+       ; *car is not a symbol or
+       ; *car is a symbol but ecar does not match the special form pattern.
+       ; i used a `return' because i did not want to repeat apply calles.
        (if
 	(symbol? *car)
 	(match
 	 ecar
-	 (('syntax pattern clauses)
-	  (return (*eval-syntax pattern clauses *cdr env)))
-	 (('macro pattern clauses)
-	  (return (*eval-macro pattern clauses *cdr env)))
-	 (_ 'any)))
-       (*apply ecar (map (lambda (arg) (*eval arg env)) *cdr))))))
-
-(define (*eval-syntax pattern clauses cdr env)
-  (define (trigger) (list 'quote (cons env cdr)))
-  (eval
-   (list 'match (trigger) (list pattern clauses))
-   (interaction-environment)))
-
-(define (*eval-macro pattern clauses cdr env)
-  (list 'macro pattern clauses cdr env))
+	 (((= choose-special-form-handler handler) pattern clauses)
+	  (return (handler pattern clauses)))
+	 (_ "not an error. proceed to the *apply call")))
+       (*apply ecar (evaluated-args))))))
 
 (define (*apply func args)
   (cond
@@ -70,29 +106,6 @@
        (else
 	(*error params "syntax: broken params"))))
     (iter params args)))
-
-(define (*eval form env)
-  (match
-   form
-   ((car . cdr) (*eval-pair car cdr env))
-   ((? *literal? _) form)
-   (_ (*binding form env))))
-
-(define (*literal? form)
-  (or
-   (null? form)
-   (boolean? form)
-   (number? form)))
-
-(define (*binding var env)
-  (call/cc
-   (lambda (return)
-     (for-each
-      (lambda (frame)
-	(if (not (hash-table? frame)) (*error frame "broken data: frame"))
-	(guard (_ (else)) (return (hash-table-get frame var))))
-      env)
-     (*error var "unbound"))))
 
 (define *error
   (lambda x
