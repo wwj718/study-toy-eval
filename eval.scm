@@ -48,7 +48,7 @@
    (lambda (return)
      (if (eq? *car 'lambda) (return (make-closure)))
      (let ((ecar (*eval *car env)))
-       ; apply if
+       ; *apply if
        ; *car is not a symbol or
        ; *car is a symbol but ecar does not match the special form pattern.
        ; i used a `return' because i did not want to repeat apply calles.
