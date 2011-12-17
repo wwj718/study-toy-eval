@@ -32,15 +32,15 @@
   (define (choose-special-form-handler selector)
     (match
      selector
-     ('syntax syntax-handler)
-     ('macro macro-handler)
+     ('syntax handle-syntax)
+     ('macro handle-macro)
      (_ #f)))
-  (define (syntax-handler pattern clauses)
+  (define (handle-syntax pattern clauses)
     (define (trigger) (list 'quote (cons env *cdr)))
     (eval
      (list 'match (trigger) (list pattern clauses))
      (interaction-environment)))
-  (define (macro-handler pattern clauses)
+  (define (handle-macro pattern clauses)
     (list 'macro pattern clauses cdr env))
   ; (call/cc (lambda (return) ... (if ... (return ...)) ...))
   ; is an idiom simulating a `return short cut.'
