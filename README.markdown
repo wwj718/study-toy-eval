@@ -24,9 +24,9 @@ no `define-syntax`
 ></dl
 >
 
-[eval.scm]: /study-toy-eval/blob/master/eval.scm
-[base-env.scm]: /study-toy-eval/blob/master/base-env.scm
-[t/*]: /study-toy-eval/blob/master/t/
+[eval.scm]: /x19290/study-toy-eval/blob/master/eval.scm
+[base-env.scm]: /x19290/study-toy-eval/blob/master/base-env.scm
+[t/*]: /x19290/study-toy-eval/blob/master/t/
 
 All names defined in [eval.scm][] and [base-env.scm][] are prefixed with `*,`
 so use `*eval` instead of `eval`, for example.
