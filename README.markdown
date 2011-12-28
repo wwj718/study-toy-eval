@@ -14,20 +14,20 @@ This is a very simple Scheme like Lisp interpreter written in Gauche.
 There is no tail call optimization, no first class continuation,
 no `define-syntax`
 
+<!--
+For current github browser, it is not a good idea to make references
+from README.markdown into the repository in which the file is included.
+!-->
+
 <dl
-><dt>[eval.scm][]</dt
+><dt>eval.scm</dt
 ><dd>eval and apply.</dd
-><dt>[base-env.scm][]</dt
+><dt>base-env.scm</dt
 ><dd>Basic environment to be passed to eval.</dd
-><dt>[t/*]</a></dt
+><dt>t/*</dt
 ><dd>Tests. Run, for example, by `gosh t/9all.scm`</dd
 ></dl
 >
 
-[eval.scm]: study-toy-eval/blob/master/eval.scm
-[base-env.scm]: /x19290/study-toy-eval/blob/master/base-env.scm
-[t/*]: /x19290/study-toy-eval/blob/master/t/
-
-All names defined in [eval.scm][] and [base-env.scm][] are prefixed with `*,`
+All names defined in eval.scm and base-env.scm are prefixed with `*,`
 so use `*eval` instead of `eval`, for example.
-
