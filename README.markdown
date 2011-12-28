@@ -1,8 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC
-	"-//W3C//DTD XHTML 1.1//EN"
-	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"
->
 <!--
 Copyright (C) 2011 Hiroki Horiuchi &lt;https://github.com/x19290&gt;
 
@@ -16,8 +11,10 @@ and http://www.gnu.org/licenses/license-list.html#GNUAllPermissive
 !-->
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja"><head
 ><link rev="made" href="."
-/><link rel="stylesheet" href="shared.css"
-/><link rel="contents" href="."
+/><style type="text/css">
+:target { background-color: #DEF; }
+</style
+><link rel="contents" href="."
 /><title>README</title></head><body
 ><h1>README</h1
 ><p
