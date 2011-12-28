@@ -24,7 +24,7 @@ no `define-syntax`
 ></dl
 >
 
-[eval.scm]: /x19290/study-toy-eval/blob/master/eval.scm
+[eval.scm]: blob/master/eval.scm
 [base-env.scm]: /x19290/study-toy-eval/blob/master/base-env.scm
 [t/*]: /x19290/study-toy-eval/blob/master/t/
 
