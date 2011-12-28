@@ -18,7 +18,7 @@ no `define-syntax`
 ><dt>[eval.scm][]</dt
 ><dd>eval and apply.</dd
 ><dt>[base-env.scm][]</dt
-><dd>Basic environment to pass to eval.</dd
+><dd>Basic environment to be passed to eval.</dd
 ><dt>[t/*]</a></dt
 ><dd>Tests. Run, for example, by `gosh t/9all.scm`</dd
 ></dl
