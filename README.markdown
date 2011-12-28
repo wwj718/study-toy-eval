@@ -9,29 +9,25 @@ without any warranty.
 see http://www.gnu.org/licenses/gpl-faq.html#WhatIfWorkIsShort
 and http://www.gnu.org/licenses/license-list.html#GNUAllPermissive
 !-->
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja"><head
-><link rev="made" href="."
-/><style type="text/css">
-:target { background-color: #DEF; }
-</style
-><link rel="contents" href="."
-/><title>README</title></head><body
-><h1>README</h1
-><p
->This is a very simple Scheme like Lisp interpreter written in Gauche.
+
+This is a very simple Scheme like Lisp interpreter written in Gauche.
 There is no tail call optimization, no first class continuation,
-no &lsquo;define-syntax.&rsquo;</p
-><dl
-><dt id="eval"><a href="eval.scm">eval.scm</a></dt
+no `define-syntax`
+
+<dl
+><dt>[eval.scm][]</dt
 ><dd>eval and apply.</dd
-><dt id="base-env"><a href="base-env.scm">base-env.scm</a></dt
+><dt>[base-env.scm][]</dt
 ><dd>Basic environment to pass to eval.</dd
-><dt><a href="t/">t/*</a></dt
-><dd>Tests. Run, for example, by &lsquo;gosh t/9all.scm&rsquo;</dd
+><dt>[t/*]</a></dt
+><dd>Tests. Run, for example, by `gosh t/9all.scm`</dd
 ></dl
-><p
->All names defined in <a title="inner" href="#eval">eval.scm</a> and
-<a title="inner" href="#base-env">base-env.scm</a> are prefixed with
-&lsquo;*,&rsquo;
-so use &lsquo;*eval&rsquo; instead of &lsquo;eval&rsquo;, for example.</p
-></body></html>
+>
+
+[eval.scm]: /study-toy-eval/blob/master/eval.scm
+[base-env.scm]: /study-toy-eval/blob/master/base-env.scm
+[t/*]: /study-toy-eval/blob/master/t/
+
+All names defined in [eval.scm][] and [base-env.scm][] are prefixed with `*,`
+so use `*eval` instead of `eval`, for example.
+
