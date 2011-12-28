@@ -15,7 +15,7 @@ There is no tail call optimization, no first class continuation,
 no `define-syntax`
 
 <!--
-For current github browser, it is not a good idea to make references
+For current github browser, it is not a good idea to make hyper refs
 from README.markdown into the repository in which the file is included.
 !-->
 
