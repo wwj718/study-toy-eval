@@ -11,23 +11,19 @@ and http://www.gnu.org/licenses/license-list.html#GNUAllPermissive
 !-->
 
 This is a very simple Scheme like Lisp interpreter written in Gauche.
-There is no tail call optimization, no first class continuation,
-no `define-syntax`
+There is no tail call optimization, no `define-syntax`, etc.
 
 <!--
 For current github browser, it is not a good idea to make hyper refs
 from README.markdown into the repository in which the file is included.
 !-->
 
-<dl
-><dt>eval.scm</dt
-><dd>eval and apply.</dd
-><dt>base-env.scm</dt
-><dd>Basic environment to be passed to eval.</dd
-><dt>t/*</dt
-><dd>Tests. Run, for example, by `gosh t/9all.scm`</dd
-></dl
->
+* eval.scm  
+  eval and apply.
+* base-env.scm  
+  Basic environment to be passed to eval.
+* t/*  
+  Tests. Run, for example, by `gosh t/9all.scm`
 
-All names defined in eval.scm and base-env.scm are prefixed with `*,`
+All names defined in eval.scm and base-env.scm are prefixed with *,
 so use `*eval` instead of `eval`, for example.
