@@ -18,12 +18,18 @@ For current github browser, it is not a good idea to make hyper refs
 from README.markdown into the repository in which the file is included.
 !-->
 
+# study-toy-eval
+
+## Contents
+
 * eval.scm  
   eval and apply.
 * base-env.scm  
   Basic environment to be passed to eval.
 * t/*  
-  Tests. Run, for example, by `gosh t/9all.scm`
+  Minimal tests. To run them, for example, do `gosh t/9all.scm`.
+
+## Note
 
 All names defined in eval.scm and base-env.scm are prefixed with *,
 so use `*eval` instead of `eval`, for example.
