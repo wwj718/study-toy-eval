@@ -10,6 +10,8 @@ see http://www.gnu.org/licenses/gpl-faq.html#WhatIfWorkIsShort
 and http://www.gnu.org/licenses/license-list.html#GNUAllPermissive
 !-->
 
+# study-toy-eval
+
 This is a very simple Scheme like Lisp interpreter written in Gauche.
 There is no tail call optimization, no `define-syntax`, etc.
 
@@ -17,8 +19,6 @@ There is no tail call optimization, no `define-syntax`, etc.
 For current github browser, it is not a good idea to make hyper refs
 from README.markdown into the repository in which the file is included.
 !-->
-
-# study-toy-eval
 
 ## Contents
 
